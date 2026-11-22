@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Analytics Dashboard</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Tailwind custom config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a5f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen font-sans">
+
+  <!-- ===== HEADER ===== -->
+  <header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-screen-2xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <!-- Simple chart icon using SVG -->
+        <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <div>
+          <h1 class="text-xl font-bold tracking-wide">Sales Analytics Dashboard</h1>
+          <p class="text-xs text-blue-200">Real-time sales performance insights</p>
+        </div>
+      </div>
+      <!-- Record count badge -->
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-blue-200">Total Records:</span>
+        <span id="totalRecords" class="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">—</span>
+        <span id="lastUpdated" class="text-xs text-blue-200 ml-2 hidden sm:block"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="max-w-screen-2xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- ===== FILTER SECTION ===== -->
+    <section aria-label="Filters" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+        </svg>
+        <h2 class="text-sm font-semibold text-gray-700">Filters</h2>
+        <button id="resetFilters"
+          class="ml-auto text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors">
+          Reset All
+        </button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <!-- Region Filter -->
+        <div>
+          <label for="filterRegion" class="block text-xs font-medium text-gray-500 mb-1">Region</label>
+          <select id="filterRegion" class="filter-select w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+            <option value="">All Regions</option>
+            <option value="East">East</option>
+            <option value="North">North</option>
+            <option value="South">South</option>
+            <option value="West">West</option>
+          </select>
+        </div>
+        <!-- Product Category Filter -->
+        <div>
+          <label for="filterCategory" class="block text-xs font-medium text-gray-500 mb-1">Product Category</label>
+          <select id="filterCategory" class="filter-select w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+            <option value="">All Categories</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Food">Food</option>
+            <option value="Furniture">Furniture</option>
+          </select>
+        </div>
+        <!-- Customer Type Filter -->
+        <div>
+          <label for="filterCustomerType" class="block text-xs font-medium text-gray-500 mb-1">Customer Type</label>
+          <select id="filterCustomerType" class="filter-select w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+            <option value="">All Types</option>
+            <option value="New">New</option>
+            <option value="Returning">Returning</option>
+          </select>
+        </div>
+        <!-- Sales Channel Filter -->
+        <div>
+          <label for="filterChannel" class="block text-xs font-medium text-gray-500 mb-1">Sales Channel</label>
+          <select id="filterChannel" class="filter-select w-full text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+            <option value="">All Channels</option>
+            <option value="Online">Online</option>
+            <option value="Retail">Retail</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== KPI CARDS ===== -->
+    <section aria-label="Key Performance Indicators">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- KPI: Total Revenue -->
+        <article class="kpi-card bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-start gap-4 hover:shadow-md transition-shadow">
+          <div class="p-3 bg-blue-50 rounded-xl">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-medium">Total Revenue</p>
+            <p id="kpiRevenue" class="text-xl font-bold text-gray-800 mt-1">—</p>
+            <p id="kpiRevenueChange" class="text-xs text-gray-400 mt-0.5"></p>
+          </div>
+        </article>
+        <!-- KPI: Total Transactions -->
+        <article class="kpi-card bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-start gap-4 hover:shadow-md transition-shadow">
+          <div class="p-3 bg-emerald-50 rounded-xl">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-medium">Total Transactions</p>
+            <p id="kpiTransactions" class="text-xl font-bold text-gray-800 mt-1">—</p>
+            <p id="kpiTransactionsChange" class="text-xs text-gray-400 mt-0.5"></p>
+          </div>
+        </article>
+        <!-- KPI: Total Quantity Sold -->
+        <article class="kpi-card bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-start gap-4 hover:shadow-md transition-shadow">
+          <div class="p-3 bg-violet-50 rounded-xl">
+            <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-medium">Total Qty Sold</p>
+            <p id="kpiQuantity" class="text-xl font-bold text-gray-800 mt-1">—</p>
+            <p id="kpiQuantityChange" class="text-xs text-gray-400 mt-0.5"></p>
+          </div>
+        </article>
+        <!-- KPI: Average Discount -->
+        <article class="kpi-card bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-start gap-4 hover:shadow-md transition-shadow">
+          <div class="p-3 bg-amber-50 rounded-xl">
+            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 7h.01M17 17h.01M7 17L17 7M7 7a2 2 0 110 4 2 2 0 010-4zm10 10a2 2 0 110 4 2 2 0 010-4z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 font-medium">Average Discount</p>
+            <p id="kpiDiscount" class="text-xl font-bold text-gray-800 mt-1">—</p>
+            <p id="kpiDiscountChange" class="text-xs text-gray-400 mt-0.5"></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== CHARTS ROW 1: Sales Trend + Revenue per Region ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Sales Trend (wider) -->
+      <div class="chart-card lg:col-span-2">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Sales Trend (Monthly)</h3>
+          <span class="chart-badge">Line</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartSalesTrend"></canvas>
+        </div>
+      </div>
+      <!-- Revenue per Region — Polar Area Chart -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Revenue per Region</h3>
+          <span class="chart-badge">Polar Area</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartRevenueRegion"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHARTS ROW 2: Product Category + Sales per Rep ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Revenue per Product Category -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Revenue per Product Category</h3>
+          <span class="chart-badge">Doughnut</span>
+        </div>
+        <div class="chart-body chart-body--sm">
+          <canvas id="chartRevenueCategory"></canvas>
+        </div>
+      </div>
+      <!-- Sales per Sales Representative -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Sales per Sales Representative</h3>
+          <span class="chart-badge">Bar</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartSalesRep"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHARTS ROW 3: Customer Type + Payment Method + Sales Channel ===== -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- Customer Type Distribution -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Customer Type</h3>
+          <span class="chart-badge">Pie</span>
+        </div>
+        <div class="chart-body chart-body--sm">
+          <canvas id="chartCustomerType"></canvas>
+        </div>
+      </div>
+      <!-- Payment Method Usage -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Payment Method</h3>
+          <span class="chart-badge">Pie</span>
+        </div>
+        <div class="chart-body chart-body--sm">
+          <canvas id="chartPaymentMethod"></canvas>
+        </div>
+      </div>
+      <!-- Sales Channel Distribution -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Sales Channel</h3>
+          <span class="chart-badge">Pie</span>
+        </div>
+        <div class="chart-body chart-body--sm">
+          <canvas id="chartSalesChannel"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHARTS ROW 4: Scatter + Top 10 + Qty per Category ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Discount vs Sales (Scatter) -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Discount vs Sales Amount</h3>
+          <span class="chart-badge">Scatter</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartScatter"></canvas>
+        </div>
+      </div>
+      <!-- Top 10 Highest Sales -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Top 10 Highest Sales</h3>
+          <span class="chart-badge">Bar</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartTop10"></canvas>
+        </div>
+      </div>
+      <!-- Quantity Sold per Category -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Quantity Sold per Category</h3>
+          <span class="chart-badge">Bar</span>
+        </div>
+        <div class="chart-body">
+          <canvas id="chartQtyCategory"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="mt-8 border-t border-gray-200 py-5">
+    <div class="flex flex-col items-center gap-1">
+      <p class="text-xs text-gray-500 font-semibold tracking-wide">Almalik Rendrajati</p>
+      <p class="text-xs text-gray-400">
+        Sales Analytics Dashboard &copy; 2024 — Powered by Chart.js &amp; Tailwind CSS
+      </p>
+      <p class="text-xs text-gray-400">Data: kaggle Sales Dataset (VINOTH KANNA S)</p>   
+      
+      <p class="text-xs text-gray-400">Dibuat dengan <span class="text-blue-500 font-medium">IBM Bob</span></p>
+    </div>
+  </footer>
+
+  <!-- Loading Overlay — shown while JSON data is being fetched -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p class="text-sm text-gray-500 font-medium">Loading dashboard data…</p>
+  </div>
+
+  <!-- Main Script -->
+  <script src="script.js"></script>
+</body>
+</html>
